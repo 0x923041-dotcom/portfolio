@@ -1581,21 +1581,46 @@
       const promptEl = content.querySelector('.terminal-prompt');
       let sudoActive = false;
       let sudoTimeout = null;
+      let cwd = '/';
+      let signalStrength = 78;
+      let linkQuality = 93;
+      const projectFiles = {
+        styx: "STYX // intelligence flows where memory persists.",
+        fleet: "FLEET // autonomous agents online and learning.",
+        lore: "LORE // sovereign systems for uncertain eras.",
+        version: "v2.1.0 // still shipping under pressure."
+      };
+      const normalizePath = (path) => {
+        if (!path) return cwd;
+        const isAbsolute = path.startsWith('/');
+        const parts = (isAbsolute ? path : `${cwd}/${path}`).split('/');
+        const normalized = [];
+        for (const part of parts) {
+          if (!part || part === '.') continue;
+          if (part === '..') {
+            if (normalized.length) normalized.pop();
+            continue;
+          }
+          normalized.push(part);
+        }
+        return '/' + normalized.join('/');
+      };
+      const getPromptText = () => (sudoActive ? "root@lucida#" : `operator@lucida:${cwd}>`);
+      const updatePrompt = () => {
+        promptEl.textContent = getPromptText();
+        promptEl.classList.toggle('root', sudoActive);
+      };
 
       const flashTerminal = () => {
         const prev = content.style.opacity || '1';
         content.style.opacity = '0.35';
         setTimeout(() => { content.style.opacity = prev; }, 80);
       };
-      const setPrompt = (text, isRoot = false) => {
-        promptEl.textContent = text;
-        promptEl.classList.toggle('root', isRoot);
-      };
 
-      const addLine = (text, isCommand = false, extraClass = '') => {
+      const addLine = (text, isCommand = false, extraClass = '', commandPrompt = getPromptText()) => {
         const line = document.createElement('div');
         line.className = `terminal-line ${extraClass}`.trim();
-        line.textContent = isCommand ? `> ${text}` : text;
+        line.textContent = isCommand ? `${commandPrompt} ${text}` : text;
         output.appendChild(line);
         output.scrollTop = output.scrollHeight;
       };
@@ -1632,11 +1657,16 @@
           addLine("  echo      echo text");
           addLine("  whoami    identify operator");
           addLine("  ls        list services");
+          addLine("  cd        navigate filesystem");
           addLine("  styx      launch intelligence archive");
           addLine("  theme     switch theme [green|amber|red|blue]");
           addLine("  uptime    session uptime");
           addLine("  date      current datetime");
           addLine("  neofetch  system information");
+          addLine("  monitor   fake system monitor");
+          addLine("  wifi      check link state");
+          addLine("  connect   handshake with mesh");
+          addLine("  pwd       print current directory");
           addLine("  time      rome local time");
           addLine("  weather   classified forecast");
           addLine("  scan      perimeter scan");
@@ -1651,7 +1681,8 @@
             addLine("usage: cat [file]");
             return;
           }
-          if (file === 'hidden.txt') {
+          const target = normalizePath(file);
+          if (target === '/hidden.txt') {
             const recoverySequence = [
               "] r3c0v3r1ng f1l3...",
               "...",
@@ -1687,8 +1718,14 @@
               }
             };
             typeRecovery();
-          } else if (file === 'contact.txt') {
+          } else if (target === '/contact.txt') {
             addLine("placeholder@placeholder.mail.com");
+          } else if (target.startsWith('/projects/') && projectFiles[target.split('/').pop()]) {
+            addLine(projectFiles[target.split('/').pop()]);
+          } else if (target === '/projects/.thesis' || target === '/archive/thesis.enc') {
+            addLine("▓▒░ th3$!$ fr4gm3nt :: c0rrupted payload detected ░▒▓");
+            addLine("µ¶× 1#7A:: n0n-hum4n glyph stream // d3crypt d3ni3d");
+            addLine("⟟⍜⋏ ⌇⋔⏃⌰⌰ ⌿⍀⟒⌇⌇⎍⍀⟒ ⋏⟒⎐⟒⍀ ⌇⏁⍜⌿⌇");
           } else {
             addLine(`cat: ${file}: No such file or directory`);
           }
@@ -1703,14 +1740,63 @@
           }
           whoamiCount++;
         },
-        ls: () => {
-          addLine("drwxr-xr-x  STYX/");
-          addLine("drwx------  L4PL▒CE/        [ACCESS RESTRICTED]");
-          addLine("drwx------  β3T░/           [ACCESS RESTRICTED]");
-          addLine("drwx------  FLEET/          [ACCESS RESTRICTED]");
-          addLine("drwx------  ARCHIVE/        [ACCESS RESTRICTED]");
-          addLine("-rw-r--r--  contact.txt");
-          addLine("-rw-r--r--  hidden.txt        [CORRUPTED]");
+        cd: (args) => {
+          const targetArg = args[0];
+          if (!targetArg) {
+            cwd = '/';
+            updatePrompt();
+            return;
+          }
+          const target = normalizePath(targetArg);
+          if (target === '/' || target === '/projects') {
+            cwd = target;
+            updatePrompt();
+            return;
+          }
+          addLine(`bash: cd: ${targetArg}: No such file or directory`);
+        },
+        ls: (args) => {
+          const target = normalizePath(args[0] || cwd);
+          if (target === '/') {
+            addLine("drwxr-xr-x  projects/");
+            addLine("drwxr-xr-x  net/");
+            addLine("drwxr-xr-x  sys/");
+            addLine("drwx------  archive/");
+            addLine("drwxr-xr-x  STYX/");
+            addLine("drwx------  L4PL▒CE/        [ACCESS RESTRICTED]");
+            addLine("drwx------  β3T░/           [ACCESS RESTRICTED]");
+            addLine("drwx------  FLEET/          [ACCESS RESTRICTED]");
+            addLine("drwx------  ARCHIVE/        [ACCESS RESTRICTED]");
+            addLine("-rw-r--r--  contact.txt");
+            addLine("-rw-r--r--  hidden.txt        [CORRUPTED]");
+            return;
+          }
+          if (target === '/projects') {
+            Object.keys(projectFiles).forEach((name) => addLine(`-rw-r--r--  ${name}`));
+            return;
+          }
+          if (target === '/net') {
+            addLine("-rw-r--r--  wifi.status");
+            addLine("-rw-r--r--  link.trace");
+            addLine("-rw-------  mesh.keys        [ACCESS RESTRICTED]");
+            return;
+          }
+          if (target === '/sys') {
+            addLine("-rw-r--r--  cpu.stat");
+            addLine("-rw-r--r--  gpu.stat");
+            addLine("-rw-r--r--  ram.stat");
+            addLine("-rw-r--r--  thermals.stat");
+            return;
+          }
+          if (target === '/archive') {
+            addLine("-rw-------  thesis.enc");
+            addLine("-rw-------  ghost.log");
+            return;
+          }
+          addLine(`ls: cannot access '${args[0] || target}': No such file or directory`);
+        },
+        pwd: () => {
+          addLine(cwd);
         },
         fleet: () => {
           const telemetry = [
@@ -1787,6 +1873,35 @@
           addLine("VISIBILITY: UNLIMITED");
           addLine("FORECAST: DEPLOYED");
         },
+        wifi: () => {
+          signalStrength = Math.max(38, Math.min(99, signalStrength + Math.floor(Math.random() * 15) - 7));
+          linkQuality = Math.max(44, Math.min(100, linkQuality + Math.floor(Math.random() * 11) - 5));
+          addLine(`SSID: LUCIDA_MESH`);
+          addLine(`SIGNAL: ${signalStrength}%`);
+          addLine(`LINK QUALITY: ${linkQuality}/100`);
+          addLine(`STATUS: ${signalStrength > 55 ? 'CONNECTED' : 'UNSTABLE'}`);
+        },
+        connect: (args) => {
+          const target = args[0] || "mesh-gateway";
+          addLine(`initiating handshake -> ${target}`);
+          setTimeout(() => addLine("syncing entropy..."), 200);
+          setTimeout(() => addLine("verifying operator signature...ok"), 420);
+          setTimeout(() => addLine("tunnel established // latency 14ms"), 760);
+        },
+        monitor: () => {
+          addLine("SYS MONITOR [simulated] // sampling 5 ticks");
+          let t = 0;
+          const interval = setInterval(() => {
+            t++;
+            const cpu = Math.floor(25 + Math.random() * 70);
+            const gpu = Math.floor(18 + Math.random() * 75);
+            const ram = Math.floor(38 + Math.random() * 52);
+            const temp = Math.floor(52 + Math.random() * 34);
+            addLine(`tick ${t} | CPU ${cpu}% | GPU ${gpu}% | RAM ${ram}% | TEMP ${temp}C`);
+            if (cpu > 84 || gpu > 88) addLine("  spike detected // throttling not required");
+            if (t >= 5) clearInterval(interval);
+          }, 380);
+        },
         scan: () => {
           const lines = [
             "INITIATING PERIMETER SCAN...",
@@ -1814,7 +1929,7 @@
           if (sudoActive) return;
           sudoActive = true;
           flashTerminal();
-          setPrompt("root@lucida#", true);
+          updatePrompt();
           if (sudoTimeout) clearTimeout(sudoTimeout);
           sudoTimeout = setTimeout(() => {
             addLine("...", false, "root-line");
@@ -1822,7 +1937,7 @@
             setTimeout(() => {
               addLine("Yeah, no.", false, "root-line");
               sudoActive = false;
-              setPrompt(">", false);
+              updatePrompt();
               flashTerminal();
             }, 500);
           }, 3000);
@@ -1852,11 +1967,11 @@
           addLine("just the fleet and the deadline.");
         },
         thesis: () => {
-          addLine("124 pages.");
-          addLine("190 bibliography entries.");
-          addLine("zero textbooks purchased.");
-          addLine("discussion: july 23rd.");
-          addLine("the operator does not stop building.");
+          addLine("▓▒░ TH3$!$ PAYL04D C0RRUPT3D ░▒▓");
+          addLine("⛧ 1#A7:: v0!d-scr!pt unmappeÐ");
+          addLine("ꙮ⟁⌇/::fr4gm3nt:: [[[[ x9x9x9 ]]]]");
+          addLine("ḉ̶͚͝0̶͎͒n̴̘͝t̴̛̹e̷̲͘n̵̤̒t̸̜̍ ̸͓̋ṅ̶̜0̶͓͆t̶̩̔ ̵̪̾l̷͚̓3̸̪̂g̶̲̚i̷͉͊b̷̜͌l̴̠̍3̷̟̕");
+          addLine("▚▞▚▞ operator note: some documents should stay buried.");
         },
         exit: () => {
           addLine("attempting graceful shutdown...");
@@ -2030,6 +2145,7 @@
           initSnake(win);
         }
       };
+      updatePrompt();
 
       input.addEventListener('keydown', (e) => {
         resetIdleTimer();
@@ -2042,7 +2158,7 @@
           terminalHistory.push(raw);
           terminalHistoryIdx = terminalHistory.length;
           
-          addLine(raw, true);
+          addLine(raw, true, '', getPromptText());
           
           const parts = raw.split(/\s+/);
           const cmd = parts[0].toLowerCase();
