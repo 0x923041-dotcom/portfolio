@@ -334,6 +334,14 @@
       text-transform: uppercase;
     }
 
+    .tile-sub {
+      font-size: 0.55rem;
+      letter-spacing: 0.14em;
+      color: var(--text-dim);
+      opacity: 0.8;
+      text-transform: uppercase;
+    }
+
     /* Corrupted Tiles */
     .tile-red { --green: var(--red); --border: rgba(255, 60, 60, 0.15); }
     .tile-amber { --green: var(--amber); --border: rgba(255, 179, 0, 0.15); }
@@ -1146,6 +1154,7 @@
       tile.innerHTML = `
         ${iconHtml}
         <div class="tile-label">${data.label}</div>
+        ${data.id === 'tile-contact' ? '<div class="tile-sub">secure uplink</div>' : ''}
       `;
 
       if (data.corrupted) {
@@ -2437,21 +2446,31 @@
 
     // Contact Tile
     const contactTile = document.getElementById('tile-contact');
+    let contactPulseTimer = null;
     contactTile.addEventListener('click', () => {
-      const email = 'placeholder@placeholder.mail.com';
-      navigator.clipboard.writeText(email).then(() => {
-        const label = contactTile.querySelector('.tile-label');
-        const oldLabel = label.textContent;
-        label.textContent = 'COPIED';
-        contactTile.style.borderColor = 'var(--green)';
-        contactTile.style.boxShadow = '0 0 20px var(--green)';
-        
-        setTimeout(() => {
-          label.textContent = oldLabel;
+      const label = contactTile.querySelector('.tile-label');
+      if (!label) return;
+
+      if (contactPulseTimer) clearTimeout(contactPulseTimer);
+
+      label.textContent = 'CONNECTING...';
+      contactTile.style.borderColor = 'var(--green)';
+      contactTile.style.boxShadow = '0 0 20px var(--green)';
+
+      const mailWindow = window.open('mailto:lucidaoperator@proton.me', '_blank', 'noopener,noreferrer');
+      if (mailWindow) {
+        mailWindow.opener = null;
+      }
+
+      contactPulseTimer = setTimeout(() => {
+        label.textContent = 'MAIL CLIENT OPENED';
+        contactPulseTimer = setTimeout(() => {
+          label.textContent = 'CONTACT';
           contactTile.style.borderColor = '';
           contactTile.style.boxShadow = '';
-        }, 1500);
-      });
+          contactPulseTimer = null;
+        }, 1200);
+      }, 300);
     });
 
     // Control Panel
