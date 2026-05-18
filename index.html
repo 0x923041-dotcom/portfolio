@@ -892,6 +892,7 @@
       { text: "", delay: 300 },
       { text: "[OK] CPU: 4 OCPU / 24GB RAM — NOMINAL", class: "boot-ok", delay: 200 },
       { text: "[OK] STORAGE: 485GB SOVEREIGN BLOCK STORAGE — MOUNTED", class: "boot-ok", delay: 200 },
+      { text: "[FILESYSTEM]........OK", class: "boot-ok", delay: 200, glitch: true },
       { text: "[OK] AGENT FLEET: ONLINE", class: "boot-ok", delay: 200 },
       { text: "[OK] HARVESTER: RUNNING — INGESTION ACTIVE", class: "boot-ok", delay: 200 },
       { text: "[OK] INTELLIGENCE ARCHIVE: STYX — LIVE", class: "boot-ok", delay: 200 },
@@ -1581,21 +1582,68 @@
       const promptEl = content.querySelector('.terminal-prompt');
       let sudoActive = false;
       let sudoTimeout = null;
+      let cwd = '/';
+      let signalStrength = 78;
+      let linkQuality = 93;
+      let netstatCursor = 0;
+      const projectFiles = {
+        styx: "STYX // intelligence flows where memory persists.",
+        fleet: "FLEET // autonomous agents online and learning.",
+        lore: "LORE // sovereign systems for uncertain eras.",
+        version: "v2.1.0 // still shipping under pressure."
+      };
+      const processTable = [
+        { pid: 1, name: 'init', status: 'sleeping', baseSec: 6200 },
+        { pid: 88, name: 'lucida-kernel', status: 'running', baseSec: 6100 },
+        { pid: 201, name: 'styx-daemon', status: 'running', baseSec: 5800 },
+        { pid: 317, name: 'mesh-router', status: 'running', baseSec: 5400 },
+        { pid: 422, name: 'harvester', status: 'idle', baseSec: 5100 },
+        { pid: 587, name: 'archive-indexer', status: 'sleeping', baseSec: 4600 },
+        { pid: 733, name: 'operator-shell', status: 'running', baseSec: 4200 },
+        { pid: 901, name: 'sentinel-watch', status: 'running', baseSec: 3900 }
+      ];
+      const netstatEndpoints = [
+        "tcp    10.13.37.21:55832      api.styx.mesh:443       ESTABLISHED",
+        "tcp    10.13.37.21:55848      ingest.harvester.io:443 ESTABLISHED",
+        "tcp    10.13.37.21:55863      dublin-node.lucida:443  ESTABLISHED"
+      ];
+      const formatDuration = (seconds) => {
+        const h = Math.floor(seconds / 3600);
+        const m = Math.floor((seconds % 3600) / 60);
+        const s = seconds % 60;
+        return `${h}h${String(m).padStart(2, '0')}m${String(s).padStart(2, '0')}s`;
+      };
+      const normalizePath = (path) => {
+        if (!path) return cwd;
+        const isAbsolute = path.startsWith('/');
+        const parts = (isAbsolute ? path : `${cwd}/${path}`).split('/');
+        const normalized = [];
+        for (const part of parts) {
+          if (!part || part === '.') continue;
+          if (part === '..') {
+            if (normalized.length) normalized.pop();
+            continue;
+          }
+          normalized.push(part);
+        }
+        return '/' + normalized.join('/');
+      };
+      const getPromptText = () => (sudoActive ? "root@lucida#" : `operator@lucida:${cwd}>`);
+      const updatePrompt = () => {
+        promptEl.textContent = getPromptText();
+        promptEl.classList.toggle('root', sudoActive);
+      };
 
       const flashTerminal = () => {
         const prev = content.style.opacity || '1';
         content.style.opacity = '0.35';
         setTimeout(() => { content.style.opacity = prev; }, 80);
       };
-      const setPrompt = (text, isRoot = false) => {
-        promptEl.textContent = text;
-        promptEl.classList.toggle('root', isRoot);
-      };
 
-      const addLine = (text, isCommand = false, extraClass = '') => {
+      const addLine = (text, isCommand = false, extraClass = '', commandPrompt = getPromptText()) => {
         const line = document.createElement('div');
         line.className = `terminal-line ${extraClass}`.trim();
-        line.textContent = isCommand ? `> ${text}` : text;
+        line.textContent = isCommand ? `${commandPrompt} ${text}` : text;
         output.appendChild(line);
         output.scrollTop = output.scrollHeight;
       };
@@ -1632,11 +1680,23 @@
           addLine("  echo      echo text");
           addLine("  whoami    identify operator");
           addLine("  ls        list services");
+          addLine("  cd        navigate filesystem");
           addLine("  styx      launch intelligence archive");
           addLine("  theme     switch theme [green|amber|red|blue]");
           addLine("  uptime    session uptime");
           addLine("  date      current datetime");
           addLine("  neofetch  system information");
+          addLine("  monitor   fake system monitor");
+          addLine("  wifi      check link state");
+          addLine("  connect   handshake with mesh");
+          addLine("  ps        list process table");
+          addLine("  top       process monitor");
+          addLine("  kill      signal process by pid");
+          addLine("  netstat   open network sockets");
+          addLine("  traceroute trace route to host");
+          addLine("  df        disk usage");
+          addLine("  history   show command history");
+          addLine("  pwd       print current directory");
           addLine("  time      rome local time");
           addLine("  weather   classified forecast");
           addLine("  scan      perimeter scan");
@@ -1651,7 +1711,8 @@
             addLine("usage: cat [file]");
             return;
           }
-          if (file === 'hidden.txt') {
+          const target = normalizePath(file);
+          if (target === '/hidden.txt') {
             const recoverySequence = [
               "] r3c0v3r1ng f1l3...",
               "...",
@@ -1687,8 +1748,14 @@
               }
             };
             typeRecovery();
-          } else if (file === 'contact.txt') {
-            addLine("placeholder@placeholder.mail.com");
+          } else if (target === '/contact.txt') {
+            addLine("lucidaoperator@proton.me");
+          } else if (target.startsWith('/projects/') && projectFiles[target.split('/').pop()]) {
+            addLine(projectFiles[target.split('/').pop()]);
+          } else if (target === '/projects/.thesis' || target === '/archive/thesis.enc') {
+            addLine("▓▒░ th3$!$ fr4gm3nt :: c0rrupted payload detected ░▒▓");
+            addLine("µ¶× 1#7A:: n0n-hum4n glyph stream // d3crypt d3ni3d");
+            addLine("⟟⍜⋏ ⌇⋔⏃⌰⌰ ⌿⍀⟒⌇⌇⎍⍀⟒ ⋏⟒⎐⟒⍀ ⌇⏁⍜⌿⌇");
           } else {
             addLine(`cat: ${file}: No such file or directory`);
           }
@@ -1703,14 +1770,63 @@
           }
           whoamiCount++;
         },
-        ls: () => {
-          addLine("drwxr-xr-x  STYX/");
-          addLine("drwx------  L4PL▒CE/        [ACCESS RESTRICTED]");
-          addLine("drwx------  β3T░/           [ACCESS RESTRICTED]");
-          addLine("drwx------  FLEET/          [ACCESS RESTRICTED]");
-          addLine("drwx------  ARCHIVE/        [ACCESS RESTRICTED]");
-          addLine("-rw-r--r--  contact.txt");
-          addLine("-rw-r--r--  hidden.txt        [CORRUPTED]");
+        cd: (args) => {
+          const targetArg = args[0];
+          if (!targetArg) {
+            cwd = '/';
+            updatePrompt();
+            return;
+          }
+          const target = normalizePath(targetArg);
+          if (['/', '/projects', '/net', '/sys', '/archive'].includes(target)) {
+            cwd = target;
+            updatePrompt();
+            return;
+          }
+          addLine(`bash: cd: ${targetArg}: No such file or directory`);
+        },
+        ls: (args) => {
+          const target = normalizePath(args[0] || cwd);
+          if (target === '/') {
+            addLine("drwxr-xr-x  projects/");
+            addLine("drwxr-xr-x  net/");
+            addLine("drwxr-xr-x  sys/");
+            addLine("drwx------  archive/");
+            addLine("drwxr-xr-x  STYX/");
+            addLine("drwx------  L4PL▒CE/        [ACCESS RESTRICTED]");
+            addLine("drwx------  β3T░/           [ACCESS RESTRICTED]");
+            addLine("drwx------  FLEET/          [ACCESS RESTRICTED]");
+            addLine("drwx------  ARCHIVE/        [ACCESS RESTRICTED]");
+            addLine("-rw-r--r--  contact.txt");
+            addLine("-rw-r--r--  hidden.txt        [CORRUPTED]");
+            return;
+          }
+          if (target === '/projects') {
+            Object.keys(projectFiles).forEach((name) => addLine(`-rw-r--r--  ${name}`));
+            return;
+          }
+          if (target === '/net') {
+            addLine("-rw-r--r--  wifi.status");
+            addLine("-rw-r--r--  link.trace");
+            addLine("-rw-------  mesh.keys        [ACCESS RESTRICTED]");
+            return;
+          }
+          if (target === '/sys') {
+            addLine("-rw-r--r--  cpu.stat");
+            addLine("-rw-r--r--  gpu.stat");
+            addLine("-rw-r--r--  ram.stat");
+            addLine("-rw-r--r--  thermals.stat");
+            return;
+          }
+          if (target === '/archive') {
+            addLine("-rw-------  thesis.enc");
+            addLine("-rw-------  ghost.log");
+            return;
+          }
+          addLine(`ls: cannot access '${args[0] || target}': No such file or directory`);
+        },
+        pwd: () => {
+          addLine(cwd);
         },
         fleet: () => {
           const telemetry = [
@@ -1787,6 +1903,123 @@
           addLine("VISIBILITY: UNLIMITED");
           addLine("FORECAST: DEPLOYED");
         },
+        wifi: () => {
+          signalStrength = Math.max(38, Math.min(99, signalStrength + Math.floor(Math.random() * 15) - 7));
+          linkQuality = Math.max(44, Math.min(100, linkQuality + Math.floor(Math.random() * 11) - 5));
+          addLine(`SSID: LUCIDA_MESH`);
+          addLine(`SIGNAL: ${signalStrength}%`);
+          addLine(`LINK QUALITY: ${linkQuality}/100`);
+          addLine(`STATUS: ${signalStrength > 55 ? 'CONNECTED' : 'UNSTABLE'}`);
+        },
+        connect: (args) => {
+          const target = args[0] || "mesh-gateway";
+          addLine(`initiating handshake -> ${target}`);
+          setTimeout(() => addLine("syncing entropy..."), 200);
+          setTimeout(() => addLine("verifying operator signature...ok"), 420);
+          setTimeout(() => addLine("tunnel established // latency 14ms"), 760);
+        },
+        monitor: () => {
+          addLine("SYS MONITOR [simulated] // sampling 5 ticks");
+          let t = 0;
+          const interval = setInterval(() => {
+            t++;
+            const cpu = Math.floor(25 + Math.random() * 70);
+            const gpu = Math.floor(18 + Math.random() * 75);
+            const ram = Math.floor(38 + Math.random() * 52);
+            const temp = Math.floor(52 + Math.random() * 34);
+            addLine(`tick ${t} | CPU ${cpu}% | GPU ${gpu}% | RAM ${ram}% | TEMP ${temp}C`);
+            if (cpu > 84 || gpu > 88) addLine("  spike detected // throttling not required");
+            if (t >= 5) clearInterval(interval);
+          }, 380);
+        },
+        ps: () => {
+          const elapsed = Math.floor((Date.now() - startTime) / 1000);
+          addLine("PID  NAME              STATUS    UPTIME");
+          processTable.forEach((proc) => {
+            const up = formatDuration(proc.baseSec + elapsed + Math.floor(Math.random() * 25));
+            addLine(`${String(proc.pid).padEnd(4)} ${proc.name.padEnd(17)} ${proc.status.padEnd(9)} ${up}`);
+          });
+        },
+        top: () => {
+          const s = Math.floor((Date.now() - startTime) / 1000);
+          const h = Math.floor(s / 3600);
+          const m = Math.floor((s % 3600) / 60);
+          const sec = s % 60;
+          addLine("LUCIDA OS — process monitor");
+          addLine(`uptime: ${h}h ${m}m ${sec}s | load: 0.42 | tasks: 8`);
+          addLine("");
+          addLine("PID   NAME              CPU%   MEM%   STATUS");
+          processTable.forEach((proc) => {
+            const cpu = proc.pid === 201 ? 21 + Math.floor(Math.random() * 8) : 1 + Math.floor(Math.random() * 24);
+            const mem = proc.pid === 201 ? 14 + Math.floor(Math.random() * 5) : 2 + Math.floor(Math.random() * 18);
+            addLine(`${String(proc.pid).padEnd(5)} ${proc.name.padEnd(17)} ${String(cpu).padStart(3)}%   ${String(mem).padStart(3)}%   ${proc.status}`);
+          });
+        },
+        kill: (args) => {
+          const rawPid = args[0];
+          const pid = Number(rawPid);
+          if (!rawPid || Number.isNaN(pid)) {
+            addLine("usage: kill [pid]");
+            return;
+          }
+          if (pid === 1) {
+            addLine("nice try.");
+            return;
+          }
+          if (pid === 201) {
+            addLine("styx does not accept termination signals.");
+            return;
+          }
+          const proc = processTable.find((p) => p.pid === pid);
+          if (!proc) {
+            addLine(`kill: (${rawPid}) - No such process`);
+            return;
+          }
+          addLine(`process ${proc.name} terminated. restarting in 3s...`);
+          addLine("(i noticed that. just so you know.)");
+        },
+        netstat: () => {
+          addLine("Proto  Local Address          Foreign Address        State");
+          addLine("tcp    10.13.37.21:22         10.13.37.1:59344       ESTABLISHED");
+          addLine("tcp    10.13.37.21:443        172.20.44.9:50122      ESTABLISHED");
+          addLine("tcp    10.13.37.21:9001       10.13.37.77:44190      LISTEN");
+          addLine("udp    10.13.37.21:51820      dublin-gw.mesh:*       ESTABLISHED");
+          addLine(netstatEndpoints[netstatCursor % netstatEndpoints.length]);
+          netstatCursor++;
+        },
+        traceroute: (args) => {
+          const host = args[0];
+          if (!host) {
+            addLine("usage: traceroute [host]");
+            return;
+          }
+          if (host === 'lucida' || host === 'localhost') {
+            addLine("1  localhost (127.0.0.1)  0.4 ms");
+            addLine("you're already here.");
+            return;
+          }
+          const dublinThirdHop = `34.240.${Math.floor(Math.random() * 140) + 20}.${Math.floor(Math.random() * 200) + 10}`;
+          addLine("1  10.0.0.1      1.1 ms");
+          addLine("2  172.20.0.1    3.5 ms");
+          addLine(`3  ${dublinThirdHop}   16.2 ms`);
+          addLine(`4  ${host}   21.0 ms`);
+          addLine(`${host} reached in 4 hops.`);
+        },
+        df: () => {
+          addLine("Filesystem      Size   Used   Avail   Use%   Mounted on");
+          addLine("/dev/sda1       200G    34G    166G    17%    /");
+          addLine("archive:        735G    17G    718G     2%    /mnt/archive");
+          addLine("tmpfs            12G   1.2G   10.8G    10%    /dev/shm");
+        },
+        history: () => {
+          const entries = [
+            "01  help","02  ls","03  cd projects","04  ls","05  cat styx","06  cd /",
+            "07  wifi","08  connect dublin-gateway","09  ps","10  top","11  netstat",
+            "12  traceroute styx.mesh","13  df","14  cat hidden.txt","15  signal",
+            "16  vault","17  orbit","18  kill 422"
+          ];
+          entries.forEach((line) => addLine(line));
+        },
         scan: () => {
           const lines = [
             "INITIATING PERIMETER SCAN...",
@@ -1814,7 +2047,7 @@
           if (sudoActive) return;
           sudoActive = true;
           flashTerminal();
-          setPrompt("root@lucida#", true);
+          updatePrompt();
           if (sudoTimeout) clearTimeout(sudoTimeout);
           sudoTimeout = setTimeout(() => {
             addLine("...", false, "root-line");
@@ -1822,7 +2055,7 @@
             setTimeout(() => {
               addLine("Yeah, no.", false, "root-line");
               sudoActive = false;
-              setPrompt(">", false);
+              updatePrompt();
               flashTerminal();
             }, 500);
           }, 3000);
@@ -1852,11 +2085,11 @@
           addLine("just the fleet and the deadline.");
         },
         thesis: () => {
-          addLine("124 pages.");
-          addLine("190 bibliography entries.");
-          addLine("zero textbooks purchased.");
-          addLine("discussion: july 23rd.");
-          addLine("the operator does not stop building.");
+          addLine("▓▒░ TH3$!$ PAYL04D C0RRUPT3D ░▒▓");
+          addLine("⛧ 1#A7:: v0!d-scr!pt unmappeÐ");
+          addLine("ꙮ⟁⌇/::fr4gm3nt:: [[[[ x9x9x9 ]]]]");
+          addLine("ḉ̶͚͝0̶͎͒n̴̘͝t̴̛̹e̷̲͘n̵̤̒t̸̜̍ ̸͓̋ṅ̶̜0̶͓͆t̶̩̔ ̵̪̾l̷͚̓3̸̪̂g̶̲̚i̷͉͊b̷̜͌l̴̠̍3̷̟̕");
+          addLine("▚▞▚▞ operator note: some documents should stay buried.");
         },
         exit: () => {
           addLine("attempting graceful shutdown...");
@@ -1931,10 +2164,11 @@
         },
 
 
-        ping: () => {
-          addLine("> PINGING SOVEREIGN MESH...");
-          setTimeout(() => addLine("> reply from 10.2.7.1: ttl=61 time=12ms [STABLE]"), 250);
-          setTimeout(() => addLine("> reply from 10.2.7.9: ttl=58 time=19ms [JITTER]"), 520);
+        ping: (args) => {
+          const host = args[0] || "mesh-gateway";
+          addLine(`> PINGING ${host.toUpperCase()}...`);
+          setTimeout(() => addLine(`> reply from ${host}: ttl=61 time=12ms [STABLE]`), 250);
+          setTimeout(() => addLine(`> reply from ${host}: ttl=58 time=19ms [JITTER]`), 520);
           setTimeout(() => addLine("> packet loss: 0.4% // route integrity: ACCEPTABLE"), 820);
         },
         drift: () => {
@@ -2030,6 +2264,7 @@
           initSnake(win);
         }
       };
+      updatePrompt();
 
       input.addEventListener('keydown', (e) => {
         resetIdleTimer();
@@ -2042,7 +2277,7 @@
           terminalHistory.push(raw);
           terminalHistoryIdx = terminalHistory.length;
           
-          addLine(raw, true);
+          addLine(raw, true, '', getPromptText());
           
           const parts = raw.split(/\s+/);
           const cmd = parts[0].toLowerCase();
