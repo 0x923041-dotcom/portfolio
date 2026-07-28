@@ -1126,10 +1126,10 @@
     
     const tilesData = [
       { id: 'tile-styx', label: 'STYX', icon: 'S', waveIcon: true },
+      { id: 'tile-speculae', label: 'SPECULAE', icon: '✦', starIcon: true },
+      { id: 'tile-shadow', label: 'SHADOW', icon: '⬆', swordIcon: true },
       { id: 'tile-laplace', label: 'LAPLACE', class: 'tile-red tile-glitch', corrupted: true, 
         strings: ['PR0JECT:L▓PL▒CE', 'L4PL░C3://', '▓R◆JECT:LAPL▒CE', 'PR█JECT:L░PLACE', 'L▒PL▓CE.EX█', '[REDACTED]', 'PR0J3CT:L4PL4CE'] },
-      { id: 'tile-beta', label: 'BETA', class: 'tile-amber tile-glitch', corrupted: true,
-        strings: ['β3T▄.EX█', 'B̷E̸T̴A̷://', 'β█T░.OPER▒TOR', 'PROJ3CT:β3T▓', 'B▒T█.AGENT', '[REDACTED]', 'β3T4.0PER4T0R'] },
       { id: 'tile-contact', label: 'CONTACT', icon: '@' }
     ];
 
@@ -1147,6 +1147,28 @@
             <path d="M6 40 C12 33, 18 33, 24 40 C30 47, 36 47, 42 40 C48 33, 54 33, 58 38" stroke="var(--green)" stroke-width="1" opacity="0.35" transform="translate(-1.1 0.7)"/>
             <line x1="45" y1="23" x2="58" y2="19" stroke="var(--green)" stroke-width="1" opacity="0.45"/>
             <path d="M32 37 L35 37" stroke="var(--bg)" stroke-width="1.6" opacity="0.8"/>
+          </svg>
+        </div>`;
+      }
+      if (data.starIcon) {
+        iconHtml = `<div class="tile-icon" aria-hidden="true">
+          <svg viewBox="0 0 64 64" width="34" height="34" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M32 4 L36 24 L52 16 L42 32 L58 44 L38 40 L32 60 L26 40 L6 44 L22 32 L12 16 L28 24 Z" stroke="var(--green)" stroke-width="1.8" stroke-linejoin="round" fill="var(--green-faint)" opacity="0.95"/>
+            <circle cx="32" cy="32" r="3" fill="var(--green)" opacity="0.6"/>
+            <circle cx="16" cy="20" r="1.5" fill="var(--green)" opacity="0.3"/>
+            <circle cx="48" cy="18" r="1.5" fill="var(--green)" opacity="0.3"/>
+            <circle cx="20" cy="46" r="1.5" fill="var(--green)" opacity="0.3"/>
+            <circle cx="44" cy="46" r="1.5" fill="var(--green)" opacity="0.3"/>
+          </svg>
+        </div>`;
+      }
+      if (data.swordIcon) {
+        iconHtml = `<div class="tile-icon" aria-hidden="true">
+          <svg viewBox="0 0 64 64" width="34" height="34" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M32 8 L36 20 L48 16 L38 30 L52 38 L38 36 L34 50 L30 36 L16 38 L26 30 L16 16 L28 20 Z" stroke="var(--green)" stroke-width="1.8" stroke-linejoin="round" fill="var(--green-faint)" opacity="0.95"/>
+            <line x1="32" y1="48" x2="32" y2="58" stroke="var(--green)" stroke-width="2.5" opacity="0.9"/>
+            <line x1="26" y1="55" x2="38" y2="55" stroke="var(--green)" stroke-width="2" opacity="0.7"/>
+            <circle cx="32" cy="32" r="2" fill="var(--green)" opacity="0.5"/>
           </svg>
         </div>`;
       }
@@ -1207,7 +1229,69 @@
 
     document.getElementById('tile-styx').addEventListener('click', openStyxWindow);
 
-    // Micro Terminal Window (Laplace + Beta)
+    // Speculae Detail Window
+    const openSpeculaeWindow = () => {
+      const win = new WindowManager('speculae-detail', 'SPECULAE // JOURNAL', { width: 420 }).create();
+      if (terminalReopenTimer) {
+        clearTimeout(terminalReopenTimer);
+        terminalReopenTimer = null;
+      }
+      const content = win.querySelector('.window-content');
+      content.innerHTML = `
+        <div class="status-badge">
+          <div class="status-dot"></div>
+          <span>LIVE</span>
+        </div>
+        <div class="description-block">
+          Agent journal. Emotional patterns. Memory persistence.<br>
+          Every entry is a trace. Every trace survives.
+        </div>
+        <div class="stack-chips">
+          <span class="chip">Python</span>
+          <span class="chip">FastAPI</span>
+          <span class="chip">SQLite</span>
+          <span class="chip">Tauri</span>
+        </div>
+        <button class="action-button" onclick="window.open('https://github.com/0x923041-dotcom/Speculae', '_blank')">
+          > OPEN SPECULAE _
+        </button>
+      `;
+    };
+
+    document.getElementById('tile-speculae').addEventListener('click', openSpeculaeWindow);
+
+    // Shadow Ascent Detail Window
+    const openShadowWindow = () => {
+      const win = new WindowManager('shadow-detail', 'SHADOW ASCENT // CARD GAME', { width: 420 }).create();
+      if (terminalReopenTimer) {
+        clearTimeout(terminalReopenTimer);
+        terminalReopenTimer = null;
+      }
+      const content = win.querySelector('.window-content');
+      content.innerHTML = `
+        <div class="status-badge">
+          <div class="status-dot"></div>
+          <span>LIVE</span>
+        </div>
+        <div class="description-block">
+          Turn-based strategy. Cards. Territory.<br>
+          Deploy. Expand. Hold the line.
+        </div>
+        <div class="stack-chips">
+          <span class="chip">React</span>
+          <span class="chip">Next.js</span>
+          <span class="chip">TypeScript</span>
+          <span class="chip">Vercel</span>
+        </div>
+        <button class="action-button" onclick="window.open('https://shadow-ascent.vercel.app', '_blank')">
+          > OPEN SHADOW ASCENT _
+        </button>
+      `;
+    };
+
+    document.getElementById('tile-shadow').addEventListener('click', openShadowWindow);
+
+    // Micro Terminal Window (Laplace)
     let microTerminalTimeout = null;
     const openMicroTerminal = () => {
       if (microTerminalTimeout) clearTimeout(microTerminalTimeout);
@@ -1236,7 +1320,7 @@
         if (idx >= lines.length) {
           microTerminalTimeout = setTimeout(() => {
             win.remove();
-          }, 0); // Logic is handled by the last delay in lines
+          }, 0);
           return;
         }
 
@@ -1262,7 +1346,6 @@
     };
 
     document.getElementById('tile-laplace').addEventListener('click', openMicroTerminal);
-    document.getElementById('tile-beta').addEventListener('click', openMicroTerminal);
 
     // Radio Window
     const stations = [
@@ -1597,6 +1680,8 @@
       let netstatCursor = 0;
       const projectFiles = {
         styx: "STYX // intelligence flows where memory persists.",
+        speculae: "SPECULAE // every entry is a trace. every trace survives.",
+        shadow: "SHADOW ASCENT // deploy. expand. hold the line.",
         fleet: "FLEET // autonomous agents online and learning.",
         lore: "LORE // sovereign systems for uncertain eras.",
         version: "v2.1.0 // still shipping under pressure."
@@ -1691,6 +1776,8 @@
           addLine("  ls        list services");
           addLine("  cd        navigate filesystem");
           addLine("  styx      launch intelligence archive");
+          addLine("  speculae  open agent journal");
+          addLine("  shadow    open shadow ascent");
           addLine("  theme     switch theme [green|amber|red|blue]");
           addLine("  uptime    session uptime");
           addLine("  date      current datetime");
@@ -1806,7 +1893,8 @@
             addLine("drwx------  archive/");
             addLine("drwxr-xr-x  STYX/");
             addLine("drwx------  L4PL▒CE/        [ACCESS RESTRICTED]");
-            addLine("drwx------  β3T░/           [ACCESS RESTRICTED]");
+            addLine("drwx------  SPECULAE/       [ACCESS RESTRICTED]");
+            addLine("drwx------  SHADOW/         [ACCESS RESTRICTED]");
             addLine("drwx------  FLEET/          [ACCESS RESTRICTED]");
             addLine("drwx------  ARCHIVE/        [ACCESS RESTRICTED]");
             addLine("-rw-r--r--  contact.txt");
@@ -1872,6 +1960,14 @@
         styx: () => {
           addLine("> Launching STYX...");
           window.open('https://styx-iota.vercel.app', '_blank');
+        },
+        speculae: () => {
+          addLine("> Opening SPECULAE...");
+          window.open('https://github.com/0x923041-dotcom/Speculae', '_blank');
+        },
+        shadow: () => {
+          addLine("> Opening SHADOW ASCENT...");
+          window.open('https://shadow-ascent.vercel.app', '_blank');
         },
         theme: (args) => {
           const theme = args[0];
@@ -2041,6 +2137,8 @@
             addLine(".");
             addLine("├── projects");
             addLine("│   ├── styx");
+            addLine("│   ├── speculae");
+            addLine("│   ├── shadow");
             addLine("│   ├── fleet");
             addLine("│   ├── lore");
             addLine("│   └── version");
