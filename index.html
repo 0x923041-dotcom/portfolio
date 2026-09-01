@@ -1125,7 +1125,7 @@
     const tileGrid = document.getElementById('tile-grid');
     
     const tilesData = [
-      { id: 'tile-styx', label: 'STYX', icon: 'S', waveIcon: true },
+      { id: 'tile-styx', label: 'CONCEPTIO', icon: 'C', waveIcon: true },
       { id: 'tile-speculae', label: 'SPECULAE', icon: '✦', starIcon: true },
       { id: 'tile-shadow', label: 'SHADOW', icon: '⬆', swordIcon: true },
       { id: 'tile-laplace', label: 'LAPLACE', class: 'tile-red tile-glitch', corrupted: true, 
@@ -1199,7 +1199,7 @@
 
     // Styx Detail Window
     const openStyxWindow = () => {
-      const win = new WindowManager('styx-detail', 'STYX // INTELLIGENCE ARCHIVE', { width: 420 }).create();
+      const win = new WindowManager('styx-detail', 'CONCEPTIO // INTELLIGENCE ARCHIVE', { width: 420 }).create();
       if (terminalReopenTimer) {
         clearTimeout(terminalReopenTimer);
         terminalReopenTimer = null;
@@ -1221,7 +1221,7 @@
           <span class="chip">Firebase</span>
           <span class="chip">Vercel</span>
         </div>
-        <button class="action-button" onclick="window.open('https://styx-iota.vercel.app', '_blank')">
+        <button class="action-button" onclick="window.open('https://conceptio.app', '_blank')">
           > OPEN STYX _
         </button>
       `;
@@ -1679,7 +1679,7 @@
       let linkQuality = 93;
       let netstatCursor = 0;
       const projectFiles = {
-        styx: "STYX // intelligence flows where memory persists.",
+        styx: "CONCEPTIO // intelligence flows where memory persists.",
         speculae: "SPECULAE // every entry is a trace. every trace survives.",
         shadow: "SHADOW ASCENT // deploy. expand. hold the line.",
         fleet: "FLEET // autonomous agents online and learning.",
@@ -1959,7 +1959,7 @@
         },
         styx: () => {
           addLine("> Launching STYX...");
-          window.open('https://styx-iota.vercel.app', '_blank');
+          window.open('https://conceptio.app', '_blank');
         },
         speculae: () => {
           addLine("> Opening SPECULAE...");
