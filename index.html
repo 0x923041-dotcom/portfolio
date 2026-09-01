@@ -363,7 +363,7 @@
       6%, 18%, 58% { border-color: rgba(255, 179, 0, 0.5); }
     }
 
-    /* Styx Window Specifics */
+    /* Conceptio Window Specifics */
     .status-badge {
       display: inline-flex;
       align-items: center;
@@ -903,7 +903,7 @@
       { text: "[OK] FILESYSTEM: MOUNT TABLE VERIFIED", class: "boot-ok", delay: 200, glitch: true },
       { text: "[OK] AGENT FLEET: ONLINE", class: "boot-ok", delay: 200 },
       { text: "[OK] HARVESTER: RUNNING — INGESTION ACTIVE", class: "boot-ok", delay: 200 },
-      { text: "[OK] INTELLIGENCE ARCHIVE: STYX — LIVE", class: "boot-ok", delay: 200 },
+      { text: "[OK] INTELLIGENCE ARCHIVE: CONCEPTIO — LIVE", class: "boot-ok", delay: 200 },
       { text: "[OK] NETWORK: SOVEREIGN MESH — STABLE", class: "boot-ok", delay: 200 },
       { text: "[..] CLASSIFIED SERVICES: SIGNAL DEGRADED", class: "boot-warn", delay: 200, glitch: true },
       { text: "[OK] KERNEL: LUCIDA OS — STABLE", class: "boot-ok", delay: 200 },
@@ -1125,7 +1125,7 @@
     const tileGrid = document.getElementById('tile-grid');
     
     const tilesData = [
-      { id: 'tile-styx', label: 'CONCEPTIO', icon: 'C', waveIcon: true },
+      { id: 'tile-conceptio', label: 'CONCEPTIO', icon: 'C', waveIcon: true },
       { id: 'tile-speculae', label: 'SPECULAE', icon: '✦', starIcon: true },
       { id: 'tile-shadow', label: 'SHADOW', icon: '⬆', swordIcon: true },
       { id: 'tile-laplace', label: 'LAPLACE', class: 'tile-red tile-glitch', corrupted: true, 
@@ -1197,9 +1197,9 @@
       tileGrid.appendChild(tile);
     });
 
-    // Styx Detail Window
-    const openStyxWindow = () => {
-      const win = new WindowManager('styx-detail', 'CONCEPTIO // INTELLIGENCE ARCHIVE', { width: 420 }).create();
+    // Conceptio Detail Window
+    const openConceptioWindow = () => {
+      const win = new WindowManager('conceptio-detail', 'CONCEPTIO // INTELLIGENCE ARCHIVE', { width: 420 }).create();
       if (terminalReopenTimer) {
         clearTimeout(terminalReopenTimer);
         terminalReopenTimer = null;
@@ -1222,12 +1222,12 @@
           <span class="chip">Vercel</span>
         </div>
         <button class="action-button" onclick="window.open('https://conceptio.app', '_blank')">
-          > OPEN STYX _
+          > OPEN CONCEPTIO _
         </button>
       `;
     };
 
-    document.getElementById('tile-styx').addEventListener('click', openStyxWindow);
+    document.getElementById('tile-conceptio').addEventListener('click', openConceptioWindow);
 
     // Speculae Detail Window
     const openSpeculaeWindow = () => {
@@ -1679,7 +1679,7 @@
       let linkQuality = 93;
       let netstatCursor = 0;
       const projectFiles = {
-        styx: "CONCEPTIO // intelligence flows where memory persists.",
+        conceptio: "CONCEPTIO // intelligence flows where memory persists.",
         speculae: "SPECULAE // every entry is a trace. every trace survives.",
         shadow: "SHADOW ASCENT // deploy. expand. hold the line.",
         fleet: "FLEET // autonomous agents online and learning.",
@@ -1689,7 +1689,7 @@
       const processTable = [
         { pid: 1, name: 'init', status: 'sleeping', baseSec: 6200 },
         { pid: 88, name: 'lucida-kernel', status: 'running', baseSec: 6100 },
-        { pid: 201, name: 'styx-daemon', status: 'running', baseSec: 5800 },
+        { pid: 201, name: 'conceptio-daemon', status: 'running', baseSec: 5800 },
         { pid: 317, name: 'mesh-router', status: 'running', baseSec: 5400 },
         { pid: 422, name: 'harvester', status: 'idle', baseSec: 5100 },
         { pid: 587, name: 'archive-indexer', status: 'sleeping', baseSec: 4600 },
@@ -1697,7 +1697,7 @@
         { pid: 901, name: 'sentinel-watch', status: 'running', baseSec: 3900 }
       ];
       const netstatEndpoints = [
-        "tcp    10.13.37.21:55832      api.styx.mesh:443       ESTABLISHED",
+        "tcp    10.13.37.21:55832      api.conceptio.mesh:443       ESTABLISHED",
         "tcp    10.13.37.21:55848      ingest.harvester.io:443 ESTABLISHED",
         "tcp    10.13.37.21:55863      dublin-node.lucida:443  ESTABLISHED"
       ];
@@ -1775,7 +1775,7 @@
           addLine("  whoami    identify operator");
           addLine("  ls        list services");
           addLine("  cd        navigate filesystem");
-          addLine("  styx      launch intelligence archive");
+          addLine("  conceptio      launch intelligence archive");
           addLine("  speculae  open agent journal");
           addLine("  shadow    open shadow ascent");
           addLine("  theme     switch theme [green|amber|red|blue]");
@@ -1891,7 +1891,7 @@
             addLine("drwxr-xr-x  net/");
             addLine("drwxr-xr-x  sys/");
             addLine("drwx------  archive/");
-            addLine("drwxr-xr-x  STYX/");
+            addLine("drwxr-xr-x  CONCEPTIO/");
             addLine("drwx------  L4PL▒CE/        [ACCESS RESTRICTED]");
             addLine("drwx------  SPECULAE/       [ACCESS RESTRICTED]");
             addLine("drwx------  SHADOW/         [ACCESS RESTRICTED]");
@@ -1951,14 +1951,14 @@
             "",
             "OPERATOR: THE ONE WHO BUILDS.",
             "LUCIDA OS: THE LENS THROUGH WHICH WE SEE.",
-            "STYX: THE RIVER OF MEMORY WE MUST NOT LOSE.",
+            "CONCEPTIO: THE RIVER OF MEMORY WE MUST NOT LOSE.",
             "",
             "THE MISSION REMAINS: PERSIST. ARCHIVE. EXPAND."
           ];
           prose.forEach(l => addLine(l));
         },
-        styx: () => {
-          addLine("> Launching STYX...");
+        conceptio: () => {
+          addLine("> Launching CONCEPTIO...");
           window.open('https://conceptio.app', '_blank');
         },
         speculae: () => {
@@ -2075,7 +2075,7 @@
             return;
           }
           if (pid === 201) {
-            addLine("styx does not accept termination signals.");
+            addLine("conceptio does not accept termination signals.");
             return;
           }
           const proc = processTable.find((p) => p.pid === pid);
@@ -2121,9 +2121,9 @@
         },
         history: () => {
           const entries = [
-            "01  help","02  ls","03  cd projects","04  ls","05  cat styx","06  cd /",
+            "01  help","02  ls","03  cd projects","04  ls","05  cat conceptio","06  cd /",
             "07  wifi","08  connect dublin-gateway","09  ps","10  top","11  netstat",
-            "12  traceroute styx.mesh","13  df","14  cat hidden.txt","15  signal",
+            "12  traceroute conceptio.mesh","13  df","14  cat hidden.txt","15  signal",
             "16  vault","17  orbit","18  kill 422"
           ];
           entries.forEach((line) => addLine(line));
@@ -2136,7 +2136,7 @@
           if (target === '/') {
             addLine(".");
             addLine("├── projects");
-            addLine("│   ├── styx");
+            addLine("│   ├── conceptio");
             addLine("│   ├── speculae");
             addLine("│   ├── shadow");
             addLine("│   ├── fleet");
@@ -2163,7 +2163,7 @@
           const now = new Date().toISOString();
           const logs = [
             `${now} kernel: mesh link stable @ 99.2% integrity`,
-            `${now} styx-daemon[201]: archive query completed in 18ms`,
+            `${now} conceptio-daemon[201]: archive query completed in 18ms`,
             `${now} sentinel-watch[901]: shadow trace updated`,
             `${now} operator-shell[733]: prompt context synced`,
             `${now} net: outbound tunnel heartbeat acknowledged`
@@ -2175,7 +2175,7 @@
             "INITIATING PERIMETER SCAN...",
             "HOST: 10.2.7.1 — LUCIDA NODE [ONLINE]",
             "HOST: 10.2.7.2 — HARVESTER [ACTIVE]",
-            "HOST: 10.2.7.3 — STYX [LIVE]",
+            "HOST: 10.2.7.3 — CONCEPTIO [LIVE]",
             "HOST: 10.2.7.4 — FLEET CORE [RESTRICTED]",
             "HOST: 10.2.7.5 — [REDACTED]",
             "HOST: 10.2.7.6 — [REDACTED]",
@@ -2384,7 +2384,7 @@
             "VITAL SIGNS DETECTED IN SECTOR 7. PROCEED WITH CAUTION.",
             "SYSTEM ADVISORY: DO NOT TRUST THE HARVESTER.",
             "BROADCASTING ON FREQUENCY 142.8MHZ: ...WAITING FOR OPERATOR...",
-            "DEEP SPACE TELEMETRY: NOISE DETECTED IN STYX ARCHIVE."
+            "DEEP SPACE TELEMETRY: NOISE DETECTED IN CONCEPTIO ARCHIVE."
           ];
           setTimeout(() => {
             const sig = signals[Math.floor(Math.random() * signals.length)];
