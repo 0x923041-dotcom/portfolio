@@ -14,11 +14,14 @@ No build step, no dependencies beyond Google Fonts.
 
 ## Facts
 
-- GitHub Actions are **disabled** for this repo — no CI. The
-  `pages-build-deployment` workflow is GitHub-generated for the Pages legacy
-  build: it cannot be deleted, and it is the site's publisher, not a gate.
-- Pages build is `legacy`, source `main:/` — a push to `main` publishes
-  <https://0x923041-dotcom.github.io/portfolio/>.
+- This repo carries **no CI**: its only workflow is GitHub's generated Pages
+  publisher (`dynamic/pages/pages-build-deployment`), which the API refuses to
+  delete (404) and which the fleet's `ci` watch counts as a publisher, not a
+  gate.
+- Actions stay **enabled** here: with them off, the Pages build never runs —
+  push-triggered and `POST /pages/builds` both queue and never complete
+  (measured 2026-11-09). Pages build is `legacy`, source `main:/`, so a push
+  to `main` publishes <https://0x923041-dotcom.github.io/portfolio/>.
 - The boot sequence is ~1.7 s: the reveal runs 8 characters per 10 ms tick
   (`BOOT_CHARS_PER_TICK` / `BOOT_TICK_MS`) and the font stylesheet loads
   non-blocking — a pending stylesheet holds back script execution.
