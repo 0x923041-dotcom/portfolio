@@ -4,9 +4,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>LUCIDA OS // OPERATOR</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Loaded non-blocking: a pending stylesheet holds back script execution,
+       and the boot sequence waited on the font fetch (measured 2026-11-09). -->
+  <link rel="stylesheet" media="print" onload="this.media='all'"
+        href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323:wght@400&display=swap">
+  <noscript>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323:wght@400&display=swap">
+  </noscript>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323:wght@400&display=swap');
-
     :root {
       --green: #00ff41;
       --green-dim: #00c832;
@@ -163,7 +170,7 @@
       flex-direction: column;
       gap: 0.5rem;
       overflow-y: auto;
-      transition: opacity 0.6s ease;
+      transition: opacity 0.18s ease;
     }
 
     .boot-line {
@@ -184,7 +191,7 @@
     /* Desktop visibility */
     #desktop {
       opacity: 0;
-      transition: opacity 0.6s ease;
+      transition: opacity 0.35s ease;
     }
     #desktop.visible {
       opacity: 1;
@@ -474,6 +481,22 @@
     .radio-btn:hover {
       border-color: var(--green);
       color: var(--green);
+    }
+
+    .radio-hint {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--amber);
+      text-align: center;
+      letter-spacing: 0.08em;
+      animation: radio-hint-pulse 1.2s ease-in-out infinite;
+    }
+    .radio-hint.radio-fault {
+      color: var(--red);
+    }
+    @keyframes radio-hint-pulse {
+      0%, 100% { opacity: 0.55; }
+      50% { opacity: 1; }
     }
 
     .station-list {
@@ -895,21 +918,28 @@
     animateCursor();
 
     // Boot Animation
+    // Timed 2026-11-09: the typewriter carried the boot, not the line pauses —
+    // 429 characters x 40 ms = 17.2 s of the old 22.8 s. The reveal now runs in
+    // batches of 8 characters per 10 ms tick and the pauses are trimmed, which
+    // lands the whole sequence at ~1.4 s without losing the cadence.
+    const BOOT_CHARS_PER_TICK = 8;
+    const BOOT_TICK_MS = 10;
+
     const baseBootLines = [
-      { text: "LUCIDA SYSTEMS v2.1.0 — INITIALIZING...", delay: 500 },
-      { text: "", delay: 300 },
-      { text: "[OK] CPU: 4 OCPU / 24GB RAM — NOMINAL", class: "boot-ok", delay: 200 },
-      { text: "[OK] STORAGE: 485GB SOVEREIGN BLOCK STORAGE — MOUNTED", class: "boot-ok", delay: 200 },
-      { text: "[OK] FILESYSTEM: MOUNT TABLE VERIFIED", class: "boot-ok", delay: 200, glitch: true },
-      { text: "[OK] AGENT FLEET: ONLINE", class: "boot-ok", delay: 200 },
-      { text: "[OK] HARVESTER: RUNNING — INGESTION ACTIVE", class: "boot-ok", delay: 200 },
-      { text: "[OK] INTELLIGENCE ARCHIVE: CONCEPTIO — LIVE", class: "boot-ok", delay: 200 },
-      { text: "[OK] NETWORK: SOVEREIGN MESH — STABLE", class: "boot-ok", delay: 200 },
-      { text: "[..] CLASSIFIED SERVICES: SIGNAL DEGRADED", class: "boot-warn", delay: 200, glitch: true },
-      { text: "[OK] KERNEL: LUCIDA OS — STABLE", class: "boot-ok", delay: 200 },
-      { text: "", delay: 500 },
-      { text: "> BOOT SEQUENCE COMPLETE.", delay: 300 },
-      { text: "> WELCOME, OPERATOR.", class: "boot-welcome", delay: 800 }
+      { text: "LUCIDA SYSTEMS v2.1.0 — INITIALIZING...", delay: 70 },
+      { text: "", delay: 40 },
+      { text: "[OK] CPU: 4 OCPU / 24GB RAM — NOMINAL", class: "boot-ok", delay: 30 },
+      { text: "[OK] STORAGE: 485GB SOVEREIGN BLOCK STORAGE — MOUNTED", class: "boot-ok", delay: 30 },
+      { text: "[OK] FILESYSTEM: MOUNT TABLE VERIFIED", class: "boot-ok", delay: 30, glitch: true },
+      { text: "[OK] AGENT FLEET: ONLINE", class: "boot-ok", delay: 30 },
+      { text: "[OK] HARVESTER: RUNNING — INGESTION ACTIVE", class: "boot-ok", delay: 30 },
+      { text: "[OK] INTELLIGENCE ARCHIVE: CONCEPTIO — LIVE", class: "boot-ok", delay: 30 },
+      { text: "[OK] NETWORK: SOVEREIGN MESH — STABLE", class: "boot-ok", delay: 30 },
+      { text: "[..] CLASSIFIED SERVICES: SIGNAL DEGRADED", class: "boot-warn", delay: 30, glitch: true },
+      { text: "[OK] KERNEL: LUCIDA OS — STABLE", class: "boot-ok", delay: 30 },
+      { text: "", delay: 50 },
+      { text: "> BOOT SEQUENCE COMPLETE.", delay: 60 },
+      { text: "> WELCOME, OPERATOR.", class: "boot-welcome", delay: 140 }
     ];
 
     const bootOverlay = document.getElementById('boot-overlay');
@@ -919,9 +949,11 @@
       const lineEl = document.createElement('div');
       lineEl.className = 'boot-line ' + (lineObj.class || '');
       bootOverlay.appendChild(lineEl);
-      
+
       const text = lineObj.text;
-      for (let i = 0; i <= text.length; i++) {
+      const steps = Math.max(1, Math.ceil((text.length + 1) / BOOT_CHARS_PER_TICK));
+      for (let step = 1; step <= steps; step++) {
+        const i = Math.min(text.length, step * BOOT_CHARS_PER_TICK);
         let displayText = text.substring(0, i);
         if (lineObj.glitch && i > 0 && i < text.length) {
           if (Math.random() > 0.8) {
@@ -930,7 +962,7 @@
           }
         }
         lineEl.textContent = displayText;
-        await new Promise(r => setTimeout(r, 40));
+        await new Promise(r => setTimeout(r, BOOT_TICK_MS));
       }
       // Resolve glitch for the line
       if (lineObj.glitch) {
@@ -945,7 +977,7 @@
         lines.splice(9, 0, {
           text: "[??] UNEXPECTED PROCESS: OBSERVER — CANNOT TERMINATE",
           class: "boot-anomaly",
-          delay: 200
+          delay: 30
         });
       }
       return lines;
@@ -956,14 +988,14 @@
       for (const line of bootLines) {
         await typeLine(line);
       }
-      await new Promise(r => setTimeout(r, 800));
+      await new Promise(r => setTimeout(r, 80));
       bootOverlay.style.opacity = '0';
       setTimeout(() => {
         bootOverlay.style.display = 'none';
         desktop.classList.add('visible');
         // Trigger terminal spawn here later
         if (window.onBootComplete) window.onBootComplete();
-      }, 600);
+      }, 200);
     }
 
     runBoot();
@@ -1127,7 +1159,6 @@
     const tilesData = [
       { id: 'tile-conceptio', label: 'CONCEPTIO', icon: 'C', waveIcon: true },
       { id: 'tile-speculae', label: 'SPECULAE', icon: '✦', starIcon: true },
-      { id: 'tile-shadow', label: 'SHADOW', icon: '⬆', swordIcon: true },
       { id: 'tile-laplace', label: 'LAPLACE', class: 'tile-red tile-glitch', corrupted: true, 
         strings: ['PR0JECT:L▓PL▒CE', 'L4PL░C3://', '▓R◆JECT:LAPL▒CE', 'PR█JECT:L░PLACE', 'L▒PL▓CE.EX█', '[REDACTED]', 'PR0J3CT:L4PL4CE'] },
       { id: 'tile-contact', label: 'CONTACT', icon: '@' }
@@ -1162,17 +1193,6 @@
           </svg>
         </div>`;
       }
-      if (data.swordIcon) {
-        iconHtml = `<div class="tile-icon" aria-hidden="true">
-          <svg viewBox="0 0 64 64" width="34" height="34" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M32 8 L36 20 L48 16 L38 30 L52 38 L38 36 L34 50 L30 36 L16 38 L26 30 L16 16 L28 20 Z" stroke="var(--green)" stroke-width="1.8" stroke-linejoin="round" fill="var(--green-faint)" opacity="0.95"/>
-            <line x1="32" y1="48" x2="32" y2="58" stroke="var(--green)" stroke-width="2.5" opacity="0.9"/>
-            <line x1="26" y1="55" x2="38" y2="55" stroke="var(--green)" stroke-width="2" opacity="0.7"/>
-            <circle cx="32" cy="32" r="2" fill="var(--green)" opacity="0.5"/>
-          </svg>
-        </div>`;
-      }
-
       tile.innerHTML = `
         ${iconHtml}
         <div class="tile-label">${data.label}</div>
@@ -1260,37 +1280,6 @@
 
     document.getElementById('tile-speculae').addEventListener('click', openSpeculaeWindow);
 
-    // Shadow Ascent Detail Window
-    const openShadowWindow = () => {
-      const win = new WindowManager('shadow-detail', 'SHADOW ASCENT // CARD GAME', { width: 420 }).create();
-      if (terminalReopenTimer) {
-        clearTimeout(terminalReopenTimer);
-        terminalReopenTimer = null;
-      }
-      const content = win.querySelector('.window-content');
-      content.innerHTML = `
-        <div class="status-badge">
-          <div class="status-dot"></div>
-          <span>LIVE</span>
-        </div>
-        <div class="description-block">
-          Turn-based strategy. Cards. Territory.<br>
-          Deploy. Expand. Hold the line.
-        </div>
-        <div class="stack-chips">
-          <span class="chip">React</span>
-          <span class="chip">Next.js</span>
-          <span class="chip">TypeScript</span>
-          <span class="chip">Vercel</span>
-        </div>
-        <button class="action-button" onclick="window.open('https://shadow-ascent.vercel.app', '_blank')">
-          > OPEN SHADOW ASCENT _
-        </button>
-      `;
-    };
-
-    document.getElementById('tile-shadow').addEventListener('click', openShadowWindow);
-
     // Micro Terminal Window (Laplace)
     let microTerminalTimeout = null;
     const openMicroTerminal = () => {
@@ -1348,6 +1337,11 @@
     document.getElementById('tile-laplace').addEventListener('click', openMicroTerminal);
 
     // Radio Window
+    // Measured 2026-11-09: all ten stations stream 206 audio/mpeg on ice1,
+    // ice2 and ice6 with a browser UA, so a silent radio is the browser's
+    // autoplay policy rather than a dead stream. A blocked play() is retried on
+    // the first gesture, a dead host walks the mirrors, and every fault shows.
+    const radioHosts = ['ice1.somafm.com', 'ice2.somafm.com', 'ice6.somafm.com'];
     const stations = [
       { name: "Groove Salad", url: "https://ice1.somafm.com/groovesalad-128-mp3" },
       { name: "Drone Zone", url: "https://ice1.somafm.com/dronezone-128-mp3" },
@@ -1362,8 +1356,113 @@
     ];
 
     let currentStationIdx = 0;
+    let radioHostIdx = 0;
+    let radioBlocked = false;
+    let radioFault = '';
+    let radioUI = null;
+    let radioFailoverBusy = false;
+    let unlockHandlers = null;
+
     const audio = new Audio();
     audio.volume = 0.5;
+    audio.preload = 'none';
+
+    const radioUrl = () => stations[currentStationIdx].url.replace('ice1.somafm.com', radioHosts[radioHostIdx]);
+
+    function paintRadioHint() {
+      if (!radioUI) return;
+      if (radioUI.hint) {
+        const text = radioFault || (radioBlocked ? '▶ CLICK ANYWHERE TO ENABLE AUDIO' : '');
+        radioUI.hint.textContent = text;
+        radioUI.hint.style.display = text ? 'block' : 'none';
+        radioUI.hint.className = 'radio-hint' + (radioFault ? ' radio-fault' : '');
+      }
+      // A rejected play() leaves audio.paused false in Chromium, so the button
+      // state follows the blocked flag, not the element's own flag.
+      if (radioUI.playBtn) {
+        radioUI.playBtn.textContent = (radioBlocked || audio.paused) ? '▶ PLAY' : '❚❚ PAUSE';
+      }
+    }
+
+    function armUnlock() {
+      if (unlockHandlers) return;
+      const onGesture = async () => {
+        if (await attemptPlay()) disarmUnlock();
+      };
+      unlockHandlers = { onGesture };
+      window.addEventListener('pointerdown', onGesture);
+      window.addEventListener('keydown', onGesture);
+    }
+
+    function disarmUnlock() {
+      if (!unlockHandlers) return;
+      window.removeEventListener('pointerdown', unlockHandlers.onGesture);
+      window.removeEventListener('keydown', unlockHandlers.onGesture);
+      unlockHandlers = null;
+    }
+
+    async function attemptPlay() {
+      try {
+        await audio.play();
+        radioBlocked = false;
+        radioFault = '';
+        disarmUnlock();
+        paintRadioHint();
+        return true;
+      } catch (err) {
+        const name = (err && err.name) || 'Error';
+        if (name === 'NotAllowedError') {
+          radioBlocked = true;
+          armUnlock();
+        } else if (!radioFailoverBusy) {
+          radioFault = 'SIGNAL FAULT: ' + name + ' — TRY ANOTHER STATION';
+        }
+        paintRadioHint();
+        return false;
+      }
+    }
+
+    async function failoverMirror() {
+      if (radioFailoverBusy) return false;
+      radioFailoverBusy = true;
+      try {
+        while (radioHostIdx < radioHosts.length - 1) {
+          radioHostIdx++;
+          radioFault = 'RESYNC → ' + radioHosts[radioHostIdx].split('.')[0].toUpperCase();
+          paintRadioHint();
+          audio.src = radioUrl();
+          audio.load();
+          if (await attemptPlay()) {
+            radioFault = '';
+            paintRadioHint();
+            return true;
+          }
+          if (radioBlocked) return false;
+        }
+        radioFault = 'NO SIGNAL — TRY ANOTHER STATION';
+        paintRadioHint();
+        return false;
+      } finally {
+        radioFailoverBusy = false;
+      }
+    }
+
+    async function playStation(idx) {
+      currentStationIdx = idx;
+      radioHostIdx = 0;
+      radioFault = '';
+      radioBlocked = false;
+      audio.src = radioUrl();
+      audio.load();
+      const ok = await attemptPlay();
+      if (!ok && !radioBlocked) await failoverMirror();
+      return ok;
+    }
+
+    audio.addEventListener('error', () => {
+      if (!audio.getAttribute('src')) return;
+      if (!radioBlocked) failoverMirror();
+    });
 
     const openRadioWindow = () => {
       const win = new WindowManager('radio-window', 'RADIO // SIGNAL INTERCEPT', { width: 350 }).create();
@@ -1372,21 +1471,20 @@
         terminalReopenTimer = null;
       }
       const content = win.querySelector('.window-content');
-      currentStationIdx = 0;
-      audio.src = stations[0].url;
-      
+
       const render = () => {
         content.innerHTML = `
           <div class="radio-container">
             <div class="radio-now-playing">
-              <div class="station-name ${!audio.paused ? 'playing' : ''}">${stations[currentStationIdx].name}</div>
+              <div class="station-name ${!audio.paused && !radioBlocked ? 'playing' : ''}">${stations[currentStationIdx].name}</div>
             </div>
             <div class="radio-controls">
               <button class="radio-btn" id="radio-prev">⏮ PREV</button>
-              <button class="radio-btn" id="radio-play">${audio.paused ? '▶ PLAY' : '❚❚ PAUSE'}</button>
+              <button class="radio-btn" id="radio-play">${radioBlocked || audio.paused ? '▶ PLAY' : '❚❚ PAUSE'}</button>
               <button class="radio-btn" id="radio-next">⏭ NEXT</button>
             </div>
             <input type="range" class="volume-slider" id="radio-volume" min="0" max="1" step="0.01" value="${audio.volume}">
+            <div class="radio-hint" id="radio-hint" style="display:none"></div>
             <div class="station-list">
               ${stations.map((s, i) => {
                 const activeClass = i === currentStationIdx ? 'active' : '';
@@ -1396,12 +1494,11 @@
           </div>
         `;
 
+        radioUI = { win, content, hint: win.querySelector('#radio-hint'), playBtn: win.querySelector('#radio-play') };
+
         win.querySelector('#radio-play').addEventListener('click', () => {
-          if (audio.src !== stations[currentStationIdx].url) {
-            audio.src = stations[currentStationIdx].url;
-          }
-          if (audio.paused) {
-            audio.play();
+          if (radioBlocked || audio.paused) {
+            attemptPlay();
           } else {
             audio.pause();
           }
@@ -1409,16 +1506,12 @@
         });
 
         win.querySelector('#radio-prev').addEventListener('click', () => {
-          currentStationIdx = (currentStationIdx - 1 + stations.length) % stations.length;
-          audio.src = stations[currentStationIdx].url;
-          if (!audio.paused) audio.play();
+          playStation((currentStationIdx - 1 + stations.length) % stations.length);
           render();
         });
 
         win.querySelector('#radio-next').addEventListener('click', () => {
-          currentStationIdx = (currentStationIdx + 1) % stations.length;
-          audio.src = stations[currentStationIdx].url;
-          if (!audio.paused) audio.play();
+          playStation((currentStationIdx + 1) % stations.length);
           render();
         });
 
@@ -1428,22 +1521,30 @@
 
         win.querySelectorAll('.station-item').forEach(item => {
           item.addEventListener('click', () => {
-            currentStationIdx = parseInt(item.dataset.idx);
-            audio.src = stations[currentStationIdx].url;
-            audio.play();
+            playStation(parseInt(item.dataset.idx));
             render();
           });
         });
+
+        paintRadioHint();
       };
 
       render();
-      const tryPlay = () => audio.play().catch(() => {});
-      tryPlay();
-      setTimeout(tryPlay, 150);
-      setTimeout(tryPlay, 500);
-      
-      audio.onplay = () => { win.querySelector('.station-name').classList.add('playing'); win.querySelector('#radio-play').textContent = '❚❚ PAUSE'; };
-      audio.onpause = () => { win.querySelector('.station-name').classList.remove('playing'); win.querySelector('#radio-play').textContent = '▶ PLAY'; };
+      playStation(0);
+      setTimeout(() => attemptPlay(), 300);
+
+      audio.onplay = () => {
+        const nameEl = win.querySelector('.station-name');
+        const playEl = win.querySelector('#radio-play');
+        if (nameEl) nameEl.classList.add('playing');
+        if (playEl) playEl.textContent = '❚❚ PAUSE';
+      };
+      audio.onpause = () => {
+        const nameEl = win.querySelector('.station-name');
+        const playEl = win.querySelector('#radio-play');
+        if (nameEl) nameEl.classList.remove('playing');
+        if (playEl) playEl.textContent = '▶ PLAY';
+      };
     };
 
     // Interactive Terminal
